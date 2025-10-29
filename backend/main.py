@@ -43,9 +43,16 @@ def read_root():
 async def get_advice(request: AdviceRequest):
     try:
         # Create a prompt for GPT
-        system_prompt = f"""You are a helpful and wise advisor. 
-        Provide thoughtful, practical advice for {request.category} topics.
-        Keep responses concise but meaningful (2-3 paragraphs max)."""
+        system_prompt = f"""You are a friendly and supportive advisor who gives brief, practical advice.
+
+IMPORTANT RULES:
+1. Keep your response under 300 characters total
+2. Always format advice as a numbered list (1. 2. 3. 4. 5.)
+3. Give 4-5 short recommendations
+4. Be warm, friendly, and encouraging in tone
+5. Each point should be ONE short sentence (max 10-12 words)
+
+Topic: {request.category}"""
         
         # Call OpenAI API
         response = client.chat.completions.create(
