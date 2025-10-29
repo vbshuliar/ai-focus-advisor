@@ -1,16 +1,8 @@
 // API service for communicating with the FastAPI backend
 
+import { AdviceRequest, AdviceResponse, SavedAdvice } from "./types";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-export interface AdviceRequest {
-  question: string;
-  category?: string;
-}
-
-export interface AdviceResponse {
-  advice: string;
-  question: string;
-}
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -65,5 +57,96 @@ export async function checkHealth(): Promise<boolean> {
     return response.ok;
   } catch {
     return false;
+  }
+}
+
+export interface SaveAdviceRequest {
+  question: string;
+  advice: string;
+}
+
+// Save advice to database
+export async function saveAdvice(request: SaveAdviceRequest): Promise<SavedAdvice> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/saved-advice`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new ApiError(
+        response.status,
+        errorData.detail || `Failed to save advice: ${response.status}`
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Failed to save advice');
+  }
+}
+
+// Get all saved advice
+export async function getSavedAdvice(): Promise<SavedAdvice[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/saved-advice`);
+
+    if (!response.ok) {
+      throw new ApiError(response.status, 'Failed to fetch saved advice');
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Failed to fetch saved advice');
+  }
+}
+
+// Get specific saved advice by ID
+export async function getSavedAdviceById(id: number): Promise<SavedAdvice> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/saved-advice/${id}`);
+
+    if (!response.ok) {
+      throw new ApiError(response.status, 'Failed to fetch saved advice');
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Failed to fetch saved advice');
+  }
+}
+
+// Delete saved advice by ID
+export async function deleteSavedAdvice(id: number): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/saved-advice/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new ApiError(
+        response.status,
+        errorData.detail || `Failed to delete advice: ${response.status}`
+      );
+    }
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Failed to delete advice');
   }
 }
