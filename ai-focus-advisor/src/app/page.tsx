@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getAdvice, ApiError } from "@/lib/api";
 
 interface SavedItem {
   id: string;
@@ -12,11 +13,37 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [savedResponses, setSavedResponses] = useState<SavedItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSend = () => {
+  const handleSend = async () => {
+    if (!input.trim()) {
+      setError("Please enter a message");
+      return;
+    }
+
     console.log("Sent:", input);
-    // Simulate AI response - replace with actual API call
-    setResponse("This is a sample AI response. Your actual AI response will appear here.");
+    setIsLoading(true);
+    setError(null);
+    setResponse("");
+
+    try {
+      const result = await getAdvice({
+        question: input,
+        category: "general"
+      });
+
+      setResponse(result.advice);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred");
+      }
+      console.error("Error getting advice:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleConfirm = () => {
@@ -44,7 +71,16 @@ export default function Home() {
           <div className="flex flex-1 flex-col gap-4">
             <div className="min-h-[300px] w-full rounded-lg border border-zinc-300 bg-white p-6 text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
               <h2 className="mb-4 text-lg font-semibold">AI Response:</h2>
-              {response ? (
+              {isLoading ? (
+                <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400">
+                  <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  <p>Getting advice...</p>
+                </div>
+              ) : error ? (
+                <div className="rounded-lg bg-red-50 border border-red-200 p-4 dark:bg-red-900/20 dark:border-red-800">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              ) : response ? (
                 <p className="whitespace-pre-wrap">{response}</p>
               ) : (
                 <p className="text-zinc-400 dark:text-zinc-600">No response yet...</p>
@@ -103,14 +139,25 @@ export default function Home() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter" && !isLoading) {
+                handleSend();
+              }
+            }}
             placeholder="Enter your message..."
-            className="flex-1 rounded-lg border border-zinc-300 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+            disabled={isLoading}
+            className="flex-1 rounded-lg border border-zinc-300 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             onClick={handleSend}
-            className="h-[52px] w-[52px] rounded-lg bg-blue-600 font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            disabled={isLoading || !input.trim()}
+            className="h-[52px] w-[52px] rounded-lg bg-blue-600 font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
           >
-            Send
+            {isLoading ? (
+              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mx-auto"></div>
+            ) : (
+              "Send"
+            )}
           </button>
         </div>
       </div>
