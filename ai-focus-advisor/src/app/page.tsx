@@ -1,65 +1,124 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+
+interface SavedItem {
+  id: string;
+  prompt: string;
+  text: string;
+}
 
 export default function Home() {
+  const [input, setInput] = useState("");
+  const [response, setResponse] = useState("");
+  const [savedResponses, setSavedResponses] = useState<SavedItem[]>([]);
+
+  const handleSend = () => {
+    console.log("Sent:", input);
+    // Simulate AI response - replace with actual API call
+    setResponse("This is a sample AI response. Your actual AI response will appear here.");
+  };
+
+  const handleConfirm = () => {
+    const newItem: SavedItem = {
+      id: Date.now().toString(),
+      prompt: input,
+      text: response,
+    };
+    setSavedResponses([...savedResponses, newItem]);
+    console.log("Saved response:", response);
+    // Add your save logic here
+  };
+
+  const handleDelete = (id: string) => {
+    setSavedResponses(savedResponses.filter((item) => item.id !== id));
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex min-h-screen flex-col items-center justify-between bg-zinc-50 font-sans dark:bg-black p-8">
+      <div className="w-full max-w-6xl" style={{ marginTop: "5vh" }}>
+        <h1 className="text-4xl font-bold text-center text-black dark:text-white mb-8">
+          AI Focus Advisor
+        </h1>
+        <div className="flex gap-6 mb-8">
+          <div className="flex flex-1 flex-col gap-4">
+            <div className="min-h-[300px] w-full rounded-lg border border-zinc-300 bg-white p-6 text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
+              <h2 className="mb-4 text-lg font-semibold">AI Response:</h2>
+              {response ? (
+                <p className="whitespace-pre-wrap">{response}</p>
+              ) : (
+                <p className="text-zinc-400 dark:text-zinc-600">No response yet...</p>
+              )}
+            </div>
+            <button
+              onClick={handleConfirm}
+              disabled={!response}
+              className="w-full rounded-lg bg-green-600 px-4 py-3 font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-zinc-300 disabled:cursor-not-allowed dark:disabled:bg-zinc-700"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Confirm
+            </button>
+          </div>
+
+          <div className="w-80 rounded-lg border border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
+            <h2 className="mb-4 text-lg font-semibold text-black dark:text-white">Saved Responses</h2>
+            <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto">
+              {savedResponses.length === 0 ? (
+                <p className="text-sm text-zinc-400 dark:text-zinc-600">No saved responses yet...</p>
+              ) : (
+                savedResponses.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800"
+                  >
+                    <span className="text-sm text-black dark:text-white truncate">
+                      {item.prompt.substring(0, 25)}...
+                    </span>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="flex-shrink-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                      title="Delete"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Enter your message..."
+            className="flex-1 rounded-lg border border-zinc-300 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+          />
+          <button
+            onClick={handleSend}
+            className="h-[52px] w-[52px] rounded-lg bg-blue-600 font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Send
+          </button>
         </div>
-      </main>
+      </div>
+      <footer className="w-full text-center py-4">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Developed by <span className="font-semibold">Terdessa</span>
+        </p>
+      </footer>
     </div>
   );
 }
